@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cupom - PDV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/images/css/theme.css" rel="stylesheet">
+</head>
+<body>
+<div class="d-print-none">
+    <div th:replace="~{menu :: menu}"></div>
+</div>
+
+<div class="container" style="max-width: 600px;">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-center" th:text="'CUP-' + ${venda.idVenda}"></h3>
+            <p class="text-center text-muted"
+               th:text="${#temporals.format(venda.dataHora, 'dd/MM/yyyy HH:mm')}"></p>
+
+            <p th:if="${venda.cliente != null}">Cliente: <span th:text="${venda.cliente.nome}"></span></p>
+
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="i : ${venda.itens}">
+                        <td th:text="${i.produto.nome}"></td>
+                        <td th:text="${i.quantidade}"></td>
+                        <td th:text="${#numbers.formatDecimal(i.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></td>
+                        <td th:text="${#numbers.formatDecimal(i.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 class="text-end">Total: R$
+                <span th:text="${#numbers.formatDecimal(venda.total, 1, 'POINT', 2, 'COMMA')}"></span>
+            </h4>
+            <p>Pagamento: <span th:text="${venda.formaPagamento}"></span></p>
+        </div>
+    </div>
+
+    <div class="d-print-none mt-3 d-flex gap-2">
+        <a th:href="@{/vendas/nova}" class="btn btn-success">Nova venda</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir</button>
+    </div>
+</div>
+</body>
+</html>

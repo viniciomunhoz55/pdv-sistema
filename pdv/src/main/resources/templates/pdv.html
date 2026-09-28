@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nova Venda - PDV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/images/css/theme.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{menu :: menu}"></div>
+
+<div class="container">
+    <h2 class="mb-3">Nova Venda</h2>
+
+    <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <input id="busca" type="text" class="form-control mb-3"
+                   placeholder="Buscar por nome ou código de barras">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr><th>Código</th><th>Nome</th><th>Preço</th><th>Estoque</th><th></th></tr>
+                </thead>
+                <tbody id="listaProdutos">
+                    <tr th:each="p : ${produtos}" th:if="${p.quantidadeEstoque > 0}">
+                        <td th:text="${p.codigoBarras}"></td>
+                        <td th:text="${p.nome}"></td>
+                        <td th:text="${p.precoVenda}"></td>
+                        <td th:text="${p.quantidadeEstoque}"></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-success"
+                                    th:attr="data-id=${p.idProduto},data-nome=${p.nome},data-preco=${p.precoVenda},data-estoque=${p.quantidadeEstoque}"
+                                    onclick="adicionar(this)">Adicionar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-lg-5">
+            <form th:action="@{/vendas}" method="post">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr><th>Item</th><th>Qtd</th><th>Subtotal</th><th></th></tr>
+                    </thead>
+                    <tbody id="carrinho"></tbody>
+                </table>
+
+                <h4 class="text-end">Total: <span id="total">R$ 0,00</span></h4>
+
+                <div class="mb-3">
+                    <label class="form-label">Cliente (opcional)</label>
+                    <select name="cliente.idCliente" class="form-select">
+                        <option value="">Sem cliente</option>
+                        <option th:each="c : ${clientes}" th:value="${c.idCliente}" th:text="${c.nome}"></option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Forma de pagamento</label>
+                    <select name="formaPagamento" class="form-select" required>
+    <option value="">Selecione...</option>
+    <option value="DINHEIRO">Dinheiro (5% desconto)</option>
+    <option value="PIX">Pix (5% desconto)</option>
+    <option value="CARTAO_DEBITO">Cartão de débito</option>
+    <option value="CARTAO_CREDITO">Cartão de crédito (3% acréscimo)</option>
+</select>
+                </div>
+
+                <button id="btnFinalizar" type="submit" class="btn btn-primary w-100" disabled>
+                    Finalizar venda
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const carrinho = [];
+
+    function moeda(v) {
+        return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function esc(t) {
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+    }
+
+    function adicionar(btn) {
+        const id = btn.dataset.id;
+        const item = carrinho.find(i => i.id === id);
+        if (item) {
+            if (item.qtd < item.estoque) item.qtd++;
+        } else {
+            carrinho.push({
+                id: id,
+                nome: btn.dataset.nome,
+                preco: parseFloat(btn.dataset.preco),
+                estoque: parseInt(btn.dataset.estoque),
+                qtd: 1
+            });
+        }
+        render();
+    }
+
+    function alterar(pos, delta) {
+        const item = carrinho[pos];
+        item.qtd += delta;
+        if (item.qtd < 1) carrinho.splice(pos, 1);
+        else if (item.qtd > item.estoque) item.qtd = item.estoque;
+        render();
+    }
+
+    function render() {
+        let html = '';
+        let total = 0;
+        carrinho.forEach((it, i) => {
+            const sub = it.preco * it.qtd;
+            total += sub;
+            html += `<tr>
+                <td>${esc(it.nome)}
+                    <input type="hidden" name="itens[${i}].produto.idProduto" value="${it.id}">
+                    <input type="hidden" name="itens[${i}].quantidade" value="${it.qtd}">
+                </td>
+                <td class="text-nowrap">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="alterar(${i}, -1)">-</button>
+                    ${it.qtd}
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="alterar(${i}, 1)">+</button>
+                </td>
+                <td>${moeda(sub)}</td>
+                <td><button type="button" class="btn btn-sm btn-danger" onclick="alterar(${i}, -999)">X</button></td>
+            </tr>`;
+        });
+        document.getElementById('carrinho').innerHTML = html;
+        document.getElementById('total').textContent = moeda(total);
+        document.getElementById('btnFinalizar').disabled = carrinho.length === 0;
+    }
+
+    document.getElementById('busca').addEventListener('input', function () {
+        const termo = this.value.toLowerCase();
+        document.querySelectorAll('#listaProdutos tr').forEach(tr => {
+            tr.style.display = tr.textContent.toLowerCase().includes(termo) ? '' : 'none';
+        });
+    });
+</script>
+</body>
+</html>
