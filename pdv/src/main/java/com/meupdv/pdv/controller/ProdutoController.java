@@ -65,6 +65,6 @@ public String buscarPorId(@RequestParam(required = false) Long id, Model model) 
         resultado = produtoService.listarTodos();
     }
     model.addAttribute("produtos", resultado);
-    return "Produtos";
+    return "produtos";
     }   
 }
