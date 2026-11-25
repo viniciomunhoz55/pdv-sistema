@@ -1,0 +1,9 @@
+<div xmlns:th="http://www.thymeleaf.org">
+    <div th:if="${erro}" class="alert alert-danger" th:text="${erro}"></div>
+
+    <div th:if="${erro == null}" id="dadosLanche"
+         th:attr="data-descricao=${descricao},data-total=${total}">
+        <p class="mb-1"><strong>Descrição:</strong> <span th:text="${descricao}"></span></p>
+        <h4>Total: R$ <span th:text="${#numbers.formatDecimal(total, 1, 2, 'COMMA')}"></span></h4>
+    </div>
+</div>

@@ -22,15 +22,15 @@
 
             <table class="table table-sm">
                 <thead>
-                    <tr><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Subtotal</th></tr>
+                <tr><th>Item</th><th>Qtd</th><th>Unit.</th><th>Subtotal</th></tr>
                 </thead>
                 <tbody>
-                    <tr th:each="i : ${venda.itens}">
-                        <td th:text="${i.produto.nome}"></td>
-                        <td th:text="${i.quantidade}"></td>
-                        <td th:text="${#numbers.formatDecimal(i.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></td>
-                        <td th:text="${#numbers.formatDecimal(i.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
-                    </tr>
+                <tr th:each="i : ${venda.itens}">
+                    <td th:text="${i.descricao != null ? i.descricao : i.produto.nome}"></td>
+                    <td th:text="${i.quantidade}"></td>
+                    <td th:text="${#numbers.formatDecimal(i.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></td>
+                    <td th:text="${#numbers.formatDecimal(i.subtotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                </tr>
                 </tbody>
             </table>
 
@@ -46,5 +46,9 @@
         <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir</button>
     </div>
 </div>
+
+<script>
+    // venda concluída: esvazia o carrinho guardado no navegador
+    try { sessionStorage.removeItem('carrinhoPDV'); } catch (e) { }
+</script>
 </body>
-</html>

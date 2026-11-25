@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Montar Lanche - PDV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/images/css/theme.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{menu :: menu}"></div>
+
+<div class="container" style="max-width: 800px;">
+    <h2 class="mb-4">Montar Lanche</h2>
+
+    <div class="mb-3">
+        <label class="form-label" for="lanche">Lanche:</label>
+        <select id="lanche" class="form-select">
+            <option th:each="l : ${lanches}" th:value="${l.key}"
+                    th:text="${l.key + ' - R$ ' + #numbers.formatDecimal(l.value, 1, 2, 'COMMA')}"></option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Adicionais:</label>
+        <div class="form-check" th:each="a, st : ${adicionais}">
+            <input class="form-check-input adicional" type="checkbox" th:id="'ad-' + ${st.index}" th:value="${a.key}">
+            <label class="form-check-label" th:for="'ad-' + ${st.index}"
+                   th:text="${a.key + ' + R$ ' + #numbers.formatDecimal(a.value, 1, 2, 'COMMA')}"></label>
+        </div>
+    </div>
+
+    <div id="resultado" class="mb-3"></div>
+
+    <div class="d-flex gap-2">
+        <button id="btnAdicionar" type="button" class="btn btn-success flex-grow-1" onclick="adicionarAoCarrinho()">
+            Adicionar ao carrinho
+        </button>
+        <a th:href="@{/vendas/nova}" class="btn btn-outline-light">Ir para o PDV</a>
+    </div>
+</div>
+
+<script>
+    const seletor = document.getElementById('lanche');
+    const resultado = document.getElementById('resultado');
+    const botao = document.getElementById('btnAdicionar');
+
+    function marcados() {
+        return Array.from(document.querySelectorAll('.adicional:checked')).map(c => c.value);
+    }
+
+    // pergunta ao servidor (Decorator em Java) quanto custa o lanche com os adicionais marcados
+    function atualizar() {
+        const params = new URLSearchParams();
+        params.append('lanche', seletor.value);
+        marcados().forEach(a => params.append('adicionais', a));
+
+        fetch('/lanches/calcular?' + params.toString())
+            .then(r => r.text())
+            .then(html => {
+                resultado.innerHTML = html;
+                botao.disabled = document.getElementById('dadosLanche') === null;
+            });
+    }
+
+    function adicionarAoCarrinho() {
+        const dados = document.getElementById('dadosLanche');
+        if (dados === null) return;
+
+        let carrinho = [];
+        try {
+            carrinho = JSON.parse(sessionStorage.getItem('carrinhoPDV') || '[]');
+        } catch (e) { }
+
+        carrinho.push({
+            tipo: 'LANCHE',
+            lanche: seletor.value,
+            adicionais: marcados(),
+            nome: dados.dataset.descricao,
+            preco: parseFloat(dados.dataset.total),
+            qtd: 1
+        });
+
+        try {
+            sessionStorage.setItem('carrinhoPDV', JSON.stringify(carrinho));
+        } catch (e) { }
+
+        window.location.href = '/vendas/nova';
+    }
+
+    seletor.addEventListener('change', atualizar);
+    document.querySelectorAll('.adicional').forEach(c => c.addEventListener('change', atualizar));
+    atualizar();
+</script>
+</body>
+</html>

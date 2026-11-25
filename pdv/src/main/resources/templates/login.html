@@ -8,13 +8,19 @@
 </head>
 <body>
 <div class="container mt-5" style="max-width: 400px;">
+
     <div class="text-center mb-4">
         <img src="/images/logoprincipal.jpeg" alt="PDV" style="max-width: 180px; border-radius: 12px;">
     </div>
+
     <h2 class="text-center mb-4">Entrar</h2>
 
-    <div th:if="${param.error}" class="alert alert-danger">
-        Usuário ou senha inválidos.
+    <div th:if="${restantes != null}" class="alert alert-danger text-center"
+         th:text="'Usuário ou senha inválidos. Você tem ' + ${restantes} + ' tentativa(s) restante(s).'"></div>
+
+    <div th:if="${bloqueadoAte != null}" id="avisoBloqueio" class="alert alert-warning text-center"
+         th:attr="data-fim=${bloqueadoAte}">
+        Conta bloqueada. Aguarde <strong id="tempoRestante"></strong> para tentar novamente.
     </div>
 
     <form th:action="@{/login}" method="post">
@@ -29,5 +35,35 @@
         <button type="submit" class="btn btn-success w-100">Entrar</button>
     </form>
 </div>
+
+<script>
+    (function () {
+        var aviso = document.getElementById('avisoBloqueio');
+        if (!aviso) return;
+        var fim = Number(aviso.dataset.fim);
+        if (isNaN(fim)) return;
+        var tempo = document.getElementById('tempoRestante');
+        var botao = document.querySelector('form button[type="submit"], form input[type="submit"]');
+        var timer;
+
+        function atualizar() {
+            var restante = Math.max(0, Math.ceil((fim - Date.now()) / 1000));
+            if (restante === 0) {
+                aviso.className = 'alert alert-success text-center';
+                aviso.textContent = 'Bloqueio encerrado. Você já pode tentar entrar novamente.';
+                if (botao) botao.disabled = false;
+                clearInterval(timer);
+                return;
+            }
+            var min = Math.floor(restante / 60);
+            var seg = restante % 60;
+            tempo.textContent = min + ' min ' + (seg < 10 ? '0' : '') + seg + ' s';
+        }
+
+        if (botao) botao.disabled = true;
+        timer = setInterval(atualizar, 1000);
+        atualizar();
+    })();
+</script>
 </body>
 </html>

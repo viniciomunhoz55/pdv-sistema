@@ -17,6 +17,16 @@ public class ItemVenda {
 
     private BigDecimal subtotal;
 
+    // texto do item na venda (usado pelo lanche, que não é um produto do estoque)
+    private String descricao;
+
+    // vêm da tela do PDV e não vão para o banco
+    @Transient
+    private String lanche;
+
+    @Transient
+    private String adicionais;
+
     @ManyToOne
     @JoinColumn(name = "id_produto")
     private Produto produto;
@@ -38,6 +48,15 @@ public class ItemVenda {
 
     public BigDecimal getSubtotal() { return subtotal; }
     public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+
+    public String getLanche() { return lanche; }
+    public void setLanche(String lanche) { this.lanche = lanche; }
+
+    public String getAdicionais() { return adicionais; }
+    public void setAdicionais(String adicionais) { this.adicionais = adicionais; }
 
     public Produto getProduto() { return produto; }
     public void setProduto(Produto produto) { this.produto = produto; }
